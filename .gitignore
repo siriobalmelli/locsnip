@@ -1,0 +1,8 @@
+# nix
+/result
+/result-*
+
+# zig
+*.o
+.zig-cache/
+zig-out/
