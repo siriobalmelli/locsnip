@@ -1,0 +1,35 @@
+---
+# .commitlintrc.yml
+extends:
+  - "@commitlint/config-conventional"
+
+rules:
+  # Allowed <type> prefixes.
+  # Decision procedure:
+  #   user-visible behavior added/changed  -> feat
+  #   user-visible behavior corrected      -> fix
+  #   prose only (README, man page, ...)   -> docs
+  #   code/tests, no behavior change       -> refactor
+  #   everything else (CI, tooling, deps)  -> build
+  type-enum:
+    - 2
+    - always
+    - - feat
+      - fix
+      - docs
+      - refactor
+      - build
+  # Type must be lowercase and present.
+  type-case:
+    - 2
+    - always
+    - lower-case
+  type-empty:
+    - 2
+    - never
+
+  # Whole first line (type + scope + description).
+  header-max-length:
+    - 2
+    - always
+    - 72
