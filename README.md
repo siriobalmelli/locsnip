@@ -134,3 +134,26 @@ For a Hunk Diff, `a` selects the first-parent version and `b` the committed vers
 Omitting `N` selects the whole hunk; explicit `N` selects a focused excerpt.
 
 See [`man locsnip`](doc/locsnip.1.md) for command syntax and detailed serialization rules.
+
+## Nix packaging
+
+Build and run locally:
+
+    nix build
+    nix run
+
+Run directly from git repo:
+
+    nix run github:siriobalmelli/locsnip#
+
+Build aggregate output with each cross-compiled executable under its target name:
+
+    nix build .#all
+
+To check which individual target packages are available:
+
+    nix flake check
+
+The bare package derivation for use with `callPackage` is:
+
+    nix/locsnip/default.nix
