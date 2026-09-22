@@ -60,3 +60,7 @@ fn showVersion(io: std.Io, args: []const [:0]const u8) !void {
     if (args.len != 0) return error.InvalidArguments;
     try std.Io.File.stdout().writeStreamingAll(io, "locsnip " ++ build_options.version ++ "\n");
 }
+
+test {
+    _ = @import("snip.zig");
+}
