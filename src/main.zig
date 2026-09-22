@@ -1,5 +1,6 @@
 const std = @import("std");
 const build_options = @import("build_options");
+const snip = @import("snip.zig");
 
 pub fn main(init: std.process.Init) u8 {
     run(init) catch |err| {
@@ -39,7 +40,8 @@ fn run(init: std.process.Init) !void {
     return switch (command) {
         .help => showHelp(init.io),
         .version => showVersion(init.io, args[2..]),
-        .snip, .diff => error.NotImplemented,
+        .snip => showSnip(init, args[2..]),
+        .diff => error.NotImplemented,
     };
 }
 
@@ -49,11 +51,18 @@ fn showHelp(io: std.Io) !void {
         \\Commands:
         \\  help, --help, -h       Show this help.
         \\  version, --version, -v Print version.
-        \\  snip ...               Not implemented.
+        \\  snip FILE LINE [N]     Show a location (default context: 8).
+        \\  snip FILE FIRST,LAST   Show an inclusive range.
         \\  diff ...               Not implemented.
         \\
     ;
     try std.Io.File.stdout().writeStreamingAll(io, usage);
+}
+
+fn showSnip(init: std.process.Init, args: []const [:0]const u8) !void {
+    const prepared = try snip.prepare(init.arena.allocator(), init.io, args);
+    try std.Io.File.stdout().writeStreamingAll(init.io, prepared.header);
+    try std.Io.File.stdout().writeStreamingAll(init.io, prepared.body);
 }
 
 fn showVersion(io: std.Io, args: []const [:0]const u8) !void {

@@ -15,6 +15,10 @@ to check whether its represented context has changed.
 The `locsnip` CLI is designed for use by text editors.
 Run from the repository root to use repository-relative paths.
 
+Location and range Snippets are implemented.
+Diff extraction is specified below but deferred to a later iteration;
+`locsnip diff` currently returns `NotImplemented`.
+
 ## Format
 
 LocSnips come in two flavors:
@@ -134,6 +138,22 @@ For a Hunk Diff, `a` selects the first-parent version and `b` the committed vers
 Omitting `N` selects the whole hunk; explicit `N` selects a focused excerpt.
 
 See [`man locsnip`](doc/locsnip.1.md) for command syntax and detailed serialization rules.
+
+## Development
+
+Build and test with Zig 0.16.0:
+
+```sh
+zig build
+zig build test
+zig fmt --check build.zig src
+bash tests/cli.sh "$PWD/zig-out/bin/locsnip" 0.1.0-dev
+```
+
+CLI tests require Bash, coreutils, and GNU `patch`.
+Their version argument must match `build.zig.zon`.
+They create disposable fixtures beneath `TMPDIR`, or `.opencode` when it is unset.
+`nix flake check` supplies the test dependencies and checks the native package.
 
 ## Nix packaging
 

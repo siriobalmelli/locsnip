@@ -31,6 +31,8 @@ They come in two flavors:
 a location or inclusive line range marked with identical deletion/addition pairs.
 
 `diff` reads a commit and emits a File Diff or Hunk Diff.
+Diff extraction is not implemented in this iteration;
+the `diff` interface below describes the planned contract.
 
 Neither command modifies files or Git state.
 
@@ -40,6 +42,9 @@ Line numbers are 1-based positive integers.
 
 `N` is a nonnegative integer.
 
+Snippet line numbers and `N` use ASCII decimal digits and must fit an unsigned 64-bit integer.
+Leading zeroes are accepted; signs, whitespace, and numeric separators are not.
+
 ### snip
 
 ```text
@@ -47,7 +52,7 @@ locsnip snip FILE LINE [N]
 locsnip snip FILE FIRST,LAST
 ```
 
-`FILE` is a relative source path on disk.
+`FILE` is a relative or absolute source path on disk.
 Run from the repository root for repository-relative paths.
 
 `LINE` is a line number in the file.
@@ -108,7 +113,14 @@ locsnip diff HEAD src/foo.py a:139 0   # Hunk Diff on first-parent line 139 (N=0
 
 For `snip` and `diff`:
 returns 0 when a LocSnip was successfully emitted to stdout;
-otherwise returns non-0, at which point stdout is guaranteed to be empty.
+otherwise returns non-0.
+Argument, input, and preparation failures leave stdout empty.
+An output write or flush failure may leave partial output.
+
+Invalid Snippet arguments, including reversed ranges, return 2.
+Input failures (including missing requested lines), allocation, concurrency, and output failures return 1.
+Diagnostics are written to stderr as `locsnip: <error-name>`.
+The current `diff` command returns 1 with `NotImplemented`.
 
 A File Diff requires an unambiguous changed-file path.
 Hunk Diffs require a matching textual hunk.
@@ -158,6 +170,21 @@ Index: src/baz.c
 ```
 
 ### Snippet Rules
+
+A location requires its focused line to exist.
+Outer context clips at the beginning and end of the file.
+Context extending beyond the representable line-number limit clips rather than wrapping.
+
+A range requires `FIRST <= LAST` and both endpoints to exist.
+It cannot take an additional context argument.
+Only its endpoints are marked; a singleton range emits one identical deletion/addition pair.
+Missing requested lines, including every selection in an empty file, return `LineOutOfRange`.
+
+LF separates source lines.
+A trailing LF does not create an additional empty line;
+nonempty bytes after the final LF form an unterminated line.
+All source bytes are preserved, including CR in CRLF endings, NUL, and non-UTF-8 bytes.
+The missing-newline rules below apply to each emitted occurrence of an unterminated line.
 
 ### Snippet Verification
 
@@ -243,12 +270,14 @@ Commit: acb845149a198065f08e8d6bd97f1bf1e8154bb2
 Snippet paths retain their working-directory-relative or absolute form.
 Repository-relative paths make snippets portable.
 
-Paths containing whitespace, double quotes, or backslashes use Git-style
+Paths containing whitespace, control bytes (including DEL),
+double quotes, or backslashes use Git-style
 C quoting: double quotes around the path and escapes for special characters.
 Spaces remain literal inside the quotes;
 tabs, newlines, carriage returns, double quotes, and backslashes
 are written as `\t`, `\n`, `\r`, `\"`, and `\\`, respectively.
 Other control bytes use three-digit octal escapes.
+Non-ASCII bytes are emitted literally.
 This header quoting is separate from shell argument quoting.
 
 ```text
