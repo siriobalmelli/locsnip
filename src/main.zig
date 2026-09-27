@@ -5,6 +5,9 @@ const snip = @import("snip.zig");
 pub fn main(init: std.process.Init) u8 {
     run(init) catch |err| {
         std.debug.print("locsnip: {s}\n", .{@errorName(err)});
+        if (err == error.MissingCommand) {
+            showHelp(init.io, std.Io.File.stderr()) catch return 1;
+        }
         return switch (err) {
             error.InvalidArguments => 2,
             error.MissingCommand => 2,
@@ -38,14 +41,14 @@ fn run(init: std.process.Init) !void {
     const command = commands.get(args[1]) orelse return error.UnknownCommand;
 
     return switch (command) {
-        .help => showHelp(init.io),
+        .help => showHelp(init.io, std.Io.File.stdout()),
         .version => showVersion(init.io, args[2..]),
         .snip => showSnip(init, args[2..]),
         .diff => error.NotImplemented,
     };
 }
 
-fn showHelp(io: std.Io) !void {
+fn showHelp(io: std.Io, output: std.Io.File) !void {
     const usage =
         \\Usage: locsnip <command>
         \\Commands:
@@ -56,7 +59,7 @@ fn showHelp(io: std.Io) !void {
         \\  diff ...               Not implemented.
         \\
     ;
-    try std.Io.File.stdout().writeStreamingAll(io, usage);
+    try output.writeStreamingAll(io, usage);
 }
 
 fn showSnip(init: std.process.Init, args: []const [:0]const u8) !void {

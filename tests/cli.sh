@@ -87,6 +87,7 @@ file_not_found="$workdir/file-not-found"
 expect_text "$file_not_found" $'locsnip: FileNotFound\n'
 help="$workdir/help"
 expect_text "$help" $'Usage: locsnip <command>\nCommands:\n  help, --help, -h       Show this help.\n  version, --version, -v Print version.\n  snip FILE LINE [N]     Show a location (default context: 8).\n  snip FILE FIRST,LAST   Show an inclusive range.\n  diff ...               Not implemented.\n'
+cat "$help" >>"$missing_command"
 version_output="$workdir/version"
 expect_text "$version_output" "locsnip $version"$'\n'
 
